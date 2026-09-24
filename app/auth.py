@@ -4,10 +4,15 @@ import bcrypt
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from fastapi import HTTPException,status,Depends
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app import models
 
 load_dotenv(); # setup env configuration
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token") # getCurrentUser() func bearer token
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token") # getCurrentUser() func bearer token
+bearer = HTTPBearer()  # reads "Authorization: Bearer <token>"
 
 SECRET_KEY = os.getenv("SECRET_KEY");
 ALGORITHM = os.getenv("ALGORITHM");
@@ -42,9 +47,15 @@ def decodeToken(access_token:str) -> dict:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-def getCurrentUser(token: str = Depends(oauth2_scheme)) -> dict:
+def getCurrentUser(
+    creds: HTTPAuthorizationCredentials = Depends(bearer),
+    db: Session = Depends(get_db),
+) -> models.User:
+    token = creds.credentials   # the raw token string
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     payload = decodeToken(token)
     username = payload.get("sub")
     if username is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     return payload
+
