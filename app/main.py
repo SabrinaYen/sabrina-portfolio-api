@@ -42,16 +42,15 @@ def login(payload: schemas.LoginRequest , db: Session = Depends(get_db)):
             raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Could not complete login");
         
         
-@app.post("/get-setting")
-def GetSetting(db: Session = Depends(get_db),user: models.User = Depends(getCurrentUser)):
+@app.post("/get-param")
+def GetParam(payload: schemas.ParamRequest,db: Session = Depends(get_db),user: models.User = Depends(getCurrentUser)):
     try:
-        setting = db.query(models.Setting).first()
-        return setting;
+        param = db.query(models.PrmSetup).filter(models.PrmSetup.locate_at == payload.paramType).all();
+        return {param.param_id: param.value for param in param}
     except:
         raise HTTPException(status.HTTP_400_BAD_REQUEST,"Error: No Rows");
 
 
-    
 
  
         
