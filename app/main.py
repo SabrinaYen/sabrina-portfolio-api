@@ -1,4 +1,6 @@
 from fastapi import Depends, HTTPException, FastAPI,status
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models, schemas
@@ -7,25 +9,24 @@ from datetime import datetime,timezone
 
 app = FastAPI();
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 def verifyUsr(payload: schemas.LoginRequest, db: Session) -> models.User | None:
-    if not payload.username or not payload.password:
-        return None
     user = db.query(models.User).filter(models.User.username == payload.username).first()
-    if not user:
-        return None
-    if not verifyPwd(payload.password, user.hashed_password):
+    if not user or not verifyPwd(payload.password, user.hashed_password):
         return None
     return user
 
-
-@app.post("/generate-token")
-def generate_token(payload: schemas.LoginRequest, db: Session = Depends(get_db)):
-    user = verifyUsr(payload, db)
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid username or password")
-    token = generateToken(data={"sub": user.username})
-    return {"access_token": token, "token_type": "bearer"}
-
+@app.post("/me")
+def me(user: models.User = Depends(getCurrentUser)):
+    return {"username": user.username};
+    
 @app.post("/login")
 def login(payload: schemas.LoginRequest , db: Session = Depends(get_db)):
     user = verifyUsr(payload, db);
@@ -37,21 +38,27 @@ def login(payload: schemas.LoginRequest , db: Session = Depends(get_db)):
             db.commit();
             token = generateToken(data={"sub": user.username})
             return {"access_token": token, "token_type": "bearer"}
-        except Exception:
+        except SQLAlchemyError:
             db.rollback();
             raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Could not complete login");
         
         
 @app.post("/get-param")
 def GetParam(payload: schemas.ParamRequest,db: Session = Depends(get_db),user: models.User = Depends(getCurrentUser)):
-    try:
-        param = db.query(models.PrmSetup).filter(models.PrmSetup.locate_at == payload.paramType).all();
-        return {param.param_id: param.value for param in param}
-    except:
+        param_rows = db.query(models.PrmSetup).filter(models.PrmSetup.locate_at == payload.paramType).all();
+        return {row.param_id: row.value for row in param_rows}
+
+
+@app.post("/get-activity-logs")
+def GetActivityLogs(payload: schemas.ActivityLogsReq,db: Session = Depends(get_db),user: models.User = Depends(getCurrentUser)):
+    logs_rows = db.query(models.ActivityLogs).filter(models.ActivityLogs.username == payload.username).all();
+    if logs_rows:
+        return [
+            {"action": row.action_name, "details": row.details, "created_at": row.created_at}
+            for row in logs_rows
+        ]
+    else:   
         raise HTTPException(status.HTTP_400_BAD_REQUEST,"Error: No Rows");
 
-
-
- 
         
     

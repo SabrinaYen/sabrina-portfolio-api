@@ -4,3 +4,6 @@ class LoginRequest(BaseModel):
     password:str
 class ParamRequest(BaseModel):
     paramType: str
+    
+class ActivityLogsReq(BaseModel):
+    username: str

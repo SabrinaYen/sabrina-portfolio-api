@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, func , Text , Boolean,UniqueConstraint
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, func , Text , Boolean,UniqueConstraint,JSON
 from app.database import base
 
 class User(base):
@@ -29,4 +29,13 @@ class PrmSetup(base):
         server_default=func.now(),
         onupdate=func.now(),
     )
-     
+    
+class ActivityLogs(base):
+    __tablename__ = "activity_logs"
+    id = Column(Integer, primary_key=True,autoincrement=True)
+    user_id = Column(Integer,ForeignKey("users.id"), nullable=False)
+    action_name = Column(String(100), nullable=True)
+    details = Column(JSON, nullable=True, default=dict)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    
+        

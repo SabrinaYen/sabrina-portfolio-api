@@ -1,6 +1,7 @@
 import os
 import jwt
 import bcrypt
+
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from fastapi import HTTPException,status,Depends
@@ -51,11 +52,19 @@ def getCurrentUser(
     creds: HTTPAuthorizationCredentials = Depends(bearer),
     db: Session = Depends(get_db),
 ) -> models.User:
-    token = creds.credentials   # the raw token string
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    payload = decodeToken(token)
+    credentials_error = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or expired token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = decodeToken(creds.credentials);
+    except JWTError:
+        raise credentials_error
     username = payload.get("sub")
     if username is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    return payload
+        raise credentials_error
+    user = db.query(models.User).filter(models.User.username == username).first();
+    return user;
+   
 
