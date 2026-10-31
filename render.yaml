@@ -1,0 +1,16 @@
+# Render Blueprint: Render reads this file when you create a "Blueprint" from the repo.
+services:
+  - type: web
+    name: sabrina-portfolio-api
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URI   # Supabase "Session pooler" connection string (paste it in Render)
+        sync: false
+      - key: SECRET_KEY     # random value made by Render
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: CORS_ORIGINS   # the sites allowed to call the API (no path, no trailing slash)
+        value: https://sabrinayen.github.io

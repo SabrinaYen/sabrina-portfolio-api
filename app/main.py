@@ -33,6 +33,12 @@ app.include_router(content_router)
 app.include_router(site_data_router)
 
 
+@app.get("/health")
+def health():
+    """Used by the host to check the API is up."""
+    return {"status": "ok"}
+
+
 def verifyUsr(payload: schemas.LoginRequest, db: Session) -> models.User | None:
     user = (
         db.query(models.User).filter(models.User.username == payload.username).first()
