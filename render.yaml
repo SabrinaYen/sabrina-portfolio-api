@@ -12,5 +12,5 @@ services:
         generateValue: true
       - key: ALGORITHM
         value: HS256
-      - key: CORS_ORIGINS   # the sites allowed to call the API (no path, no trailing slash)
-        value: https://sabrinayen.github.io
+      - key: CORS_ORIGINS   # the sites allowed to call the API (no path, no trailing slash), comma separated
+        value: https://sabrinayen.github.io,https://sabrina-portfolio-portal.onrender.com
