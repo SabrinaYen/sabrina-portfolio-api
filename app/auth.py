@@ -4,12 +4,13 @@ import bcrypt
 
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
-from fastapi import HTTPException,status,Depends
+from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app import models
+from app.errors import Unauthorized
 
 load_dotenv(); # setup env configuration
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token") # getCurrentUser() func bearer token
@@ -43,28 +44,19 @@ def decodeToken(access_token:str) -> dict:
         payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except jwt.PyJWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise Unauthorized()
 
 def getCurrentUser(
     creds: HTTPAuthorizationCredentials = Depends(bearer),
     db: Session = Depends(get_db),
 ) -> models.User:
-    credentials_error = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid or expired token",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = decodeToken(creds.credentials);
-    except JWTError:
-        raise credentials_error
+    credentials_error = Unauthorized()
+    payload = decodeToken(creds.credentials)
     username = payload.get("sub")
     if username is None:
         raise credentials_error
-    user = db.query(models.User).filter(models.User.username == username).first();
-    return user;
+    user = db.query(models.User).filter(models.User.username == username).first()
+    if user is None:
+        raise credentials_error
+    return user
    
-
