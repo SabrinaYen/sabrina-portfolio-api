@@ -8,7 +8,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-try:  # this Python may not know the system's certificates, so use the project's own list
+try:
     import certifi
     SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
 except ImportError:
@@ -86,7 +86,6 @@ def experience_payloads(src: dict) -> list[dict]:
     } for e in src["experience"]]
 
 
-# ---------- talking to the API ----------
 class Api:
     def __init__(self, base: str):
         self.base, self.token = base.rstrip("/"), None
