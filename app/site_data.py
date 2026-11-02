@@ -19,7 +19,6 @@ from app.extras import loadExtras, pick
 
 router = APIRouter()
 
-# portal content key -> uiText key on the site (only the texts you can edit)
 UI_TEXT_KEYS = {
     "tagline": "bio",
     "aboutHeading": "aboutHeading",
@@ -92,9 +91,7 @@ def buildProjects(db: Session) -> list[dict]:
             "description": bilingual(row.project_desc, pick(extras, row.id, "description", "zh")),
             "tags": tags.get(row.id, []),
             "link": row.url_link or "",
-            "isAvaliable": (available == "true") if available else bool(row.url_link),  # (sic) same key as the site
-            # "Show on site" unchecked in the portal = sensitive. The site hides these
-            # unless the page is opened with ?showAll=true.
+            "isAvaliable": (available == "true") if available else bool(row.url_link),
             "isSensitive": not row.is_published,
         }
         if row.company_id is not None:
@@ -128,7 +125,7 @@ def SiteData(db: Session = Depends(get_db)):
         if content.get(key)
     }
     return {
-        "uiText": ui_text,  # only the editable texts: merge over the site's built-in uiText
+        "uiText": ui_text,
         "personalData": buildPersonalData(content, db),
         "terminalLines": buildTerminalLines(db),
         "skills": buildSkills(db),

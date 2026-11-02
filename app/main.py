@@ -106,7 +106,6 @@ def GetActivityLogs(
     ]
 
 
-# Project API
 def checkExistedPrjRecord(company_id, purpose_id, project_name, db: Session):
     if not company_id or not purpose_id or not project_name:
         return False
@@ -123,7 +122,6 @@ def checkExistedPrjRecord(company_id, purpose_id, project_name, db: Session):
         )
 
 
-# Project sub API get company listing
 @app.get("/get-company-list")
 def GetCompanyList(
     db: Session = Depends(get_db), user: models.User = Depends(getCurrentUser)
@@ -185,7 +183,6 @@ def DeleteCompany(
         raise ServerError("Could not delete company")
 
 
-# Project sub API get purpose listing
 @app.get("/get-purpose-list")
 def GetPurposeList(
     db: Session = Depends(get_db), user: models.User = Depends(getCurrentUser)
@@ -194,7 +191,6 @@ def GetPurposeList(
     return [{"id": row.id, "name": row.name} for row in rows]
 
 
-# Project Add
 @app.post("/add-project")
 def AddProject(
     payload: schemas.ProjectAddReq,

@@ -46,7 +46,6 @@ def paramsOf(db: Session, locate_at: str) -> dict:
     return {row.param_id: row.value for row in rows}
 
 
-# ---------- site content (prm_setup) ----------
 @router.post("/save-param")
 def SaveParam(
     payload: schemas.SaveParamReq,
@@ -69,7 +68,6 @@ def SaveParam(
     return paramsOf(db, payload.paramType)
 
 
-# ---------- projects (tech stack lives in tag_grp / project_tags) ----------
 def tagNamesByProject(db: Session, extras: Extras) -> dict[int, list[str]]:
     """Tag names per project, in the order the tags were typed (project_tags has no order column)."""
     result: dict[int, list[str]] = {}
@@ -188,7 +186,6 @@ def DeleteProject(
     return {"message": "Project deleted"}
 
 
-# ---------- purposes ----------
 @router.post("/add-purpose")
 def AddPurpose(
     payload: schemas.AddPurposeReq,
@@ -226,7 +223,6 @@ def DeletePurpose(
     return {"message": "Purpose deleted"}
 
 
-# ---------- experience (portal "period" text <-> start_date / end_date) ----------
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 
@@ -245,7 +241,7 @@ def parsePeriod(period: str) -> tuple[date, date | None]:
     start = parseDate(parts[0], is_end=False)
     if not start:
         raise InvalidInput('period must look like "Oct 2024 — Present" or "Jun 2022 - Oct 2024"')
-    if len(parts) == 1 or not re.search(r"\d", parts[1]):  # "Present", "now", or nothing
+    if len(parts) == 1 or not re.search(r"\d", parts[1]):
         return start, None
     return start, parseDate(parts[1], is_end=True)
 
@@ -347,7 +343,6 @@ def DeleteExperience(
     return {"message": "Experience deleted"}
 
 
-# ---------- skill groups (skills_grp + skills; groupDesc = comma separated names) ----------
 def skillNamesByGroup(db: Session) -> dict[int, list[str]]:
     result: dict[int, list[str]] = {}
     for skill in ordered(db, models.Skill):
@@ -446,7 +441,6 @@ def DeleteSkill(
     return {"message": "Skill group deleted"}
 
 
-# ---------- social links (stored in prm_setup, locate_at = "links") ----------
 def linkList(db: Session) -> list[dict]:
     rows = (
         db.query(models.PrmSetup)
@@ -501,7 +495,6 @@ def DeleteLink(
     return {"message": "Link deleted"}
 
 
-# ---------- visitor statistics (counts live in prm_setup, locate_at = "visits") ----------
 VISITS = "visits"
 
 
@@ -530,7 +523,7 @@ def RecordVisit(db: Session = Depends(get_db)):
 def GetVisitStats(db: Session = Depends(get_db), _user: models.User = Depends(getCurrentUser)):
     counts = paramsOf(db, VISITS)
     today = date.today()
-    days = [today - timedelta(days=n) for n in range(6, -1, -1)]  # oldest first
+    days = [today - timedelta(days=n) for n in range(6, -1, -1)]
     last7 = [{"date": d.isoformat(), "count": int(counts.get(d.isoformat()) or 0)} for d in days]
     return {
         "total": int(counts.get("total") or 0),
@@ -539,7 +532,6 @@ def GetVisitStats(db: Session = Depends(get_db), _user: models.User = Depends(ge
     }
 
 
-# ---------- account ----------
 @router.post("/change-password")
 def ChangePassword(
     payload: schemas.ChangePasswordReq,

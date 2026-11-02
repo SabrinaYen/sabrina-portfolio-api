@@ -1,13 +1,9 @@
-"""Read and write the extra_text table (see migrations/002_extra_text.sql).
-
-Values are addressed as (field, lang), for example ("title", "zh") or ("icon", "").
-"""
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from app import models
 
-Extras = dict[int, dict[tuple[str, str], str]]  # entity_id -> {(field, lang): value}
+Extras = dict[int, dict[tuple[str, str], str]]
 
 
 def loadExtras(db: Session, entity: str) -> Extras:

@@ -27,7 +27,6 @@ def load_source(path: Path) -> dict:
     return json.loads(result.stdout)
 
 
-# ---------- turn the file into what the API expects ----------
 def bilingual(value) -> dict:
     return value if isinstance(value, dict) else {"en": value, "zh": ""}
 
@@ -72,8 +71,8 @@ def project_payload(p: dict, company_id: int | None) -> dict:
         "projectType": p["type"]["en"], "projectTypeZh": p["type"]["zh"],
         "projectDesc": p["description"]["en"], "projectDescZh": p["description"]["zh"],
         "techStack": ", ".join(p["tags"]), "linkURL": p["link"],
-        "isAvailable": p["isAvaliable"],  # (sic) the file's spelling
-        "projectShown": not p["isSensitive"],  # sensitive projects stay hidden on the site
+        "isAvailable": p["isAvaliable"],
+        "projectShown": not p["isSensitive"],
         "company_Id": company_id,
     }
 
@@ -97,7 +96,7 @@ class Api:
             headers={"Content-Type": "application/json", **({"Authorization": f"Bearer {self.token}"} if self.token else {})},
         )
         try:
-            with urllib.request.urlopen(request, timeout=120, context=SSL_CONTEXT) as response:  # the free host can take a while to wake
+            with urllib.request.urlopen(request, timeout=120, context=SSL_CONTEXT) as response:
                 return json.load(response)
         except urllib.error.HTTPError as error:
             detail = json.loads(error.read() or b"{}").get("detail", "")
@@ -154,7 +153,7 @@ def do_check(api: Api, src: dict):
     ok = True
     for section, expected in want.items():
         actual = got[section]
-        if section == "projects":  # the API sends hidden projects too, marked isSensitive
+        if section == "projects":
             actual = [{k: v for k, v in p.items()} for p in actual]
         same = actual == expected
         ok &= same

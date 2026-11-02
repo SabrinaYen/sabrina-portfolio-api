@@ -75,7 +75,7 @@ class InjectionTests(unittest.TestCase):
         evil = "x'); DROP TABLE company_grp; --"
         self.assertEqual(self.client.post("/add-company", headers=headers, json={"companyName": evil}).status_code, 200)
         names = [c["name"] for c in self.client.get("/get-company-list", headers=headers).json()]
-        self.assertIn(evil, names)  # saved as text, table still there
+        self.assertIn(evil, names)
 
 
 if __name__ == "__main__":

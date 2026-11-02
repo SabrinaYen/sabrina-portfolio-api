@@ -39,11 +39,10 @@ class ProjectAddReq(BaseModel):
     techStack: str | None = None
     company_Id: int | None = None
     purpose_Id: int | None = None
-    projectShown: bool = True  # published flag (checkbox in portal)
+    projectShown: bool = True 
     sortOrder: int | None = None
-    projectType: str | None = None  # e.g. "E-commerce Experience"
-    isAvailable: bool | None = None  # is the live link still working?
-    # Chinese versions
+    projectType: str | None = None
+    isAvailable: bool | None = None 
     projectNameZh: str | None = None
     projectDescZh: str | None = None
     projectTypeZh: str | None = None
@@ -59,11 +58,11 @@ class IdReq(BaseModel):
 
 class ExperienceReq(BaseModel):
     role: str
-    company: str  # company name; created in company_grp if new
-    period: str  # e.g. "Oct 2024 — Present" or "Jun 2022 - Oct 2024"
-    description: str | None = ""  # one bullet per line
+    company: str
+    period: str
+    description: str | None = ""
     roleZh: str | None = ""
-    descriptionZh: str | None = ""  # bullets in the same order as the English ones
+    descriptionZh: str | None = ""
     sortOrder: int | None = None
     isPublished: bool = True
 
@@ -74,9 +73,9 @@ class ExperienceUpdateReq(ExperienceReq):
 
 class SkillGroupReq(BaseModel):
     groupTitle: str
-    groupDesc: str | None = ""  # comma separated skill names
+    groupDesc: str | None = ""
     groupTitleZh: str | None = ""
-    groupIcon: str | None = "code"  # code, database, cloud or checked
+    groupIcon: str | None = "code"
     sortOrder: int | None = None
 
 

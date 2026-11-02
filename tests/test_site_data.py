@@ -68,15 +68,15 @@ class SiteDataTests(unittest.TestCase):
 
         self.assertEqual(set(data), {"uiText", "personalData", "terminalLines", "skills", "projects", "experience"})
         self.assertEqual(data["personalData"]["name"], {"en": "Sabrina", "zh": "淑冰"})
-        self.assertEqual(data["personalData"]["curTitle"], {"en": "Dev", "zh": "Dev"})  # no Chinese -> English
+        self.assertEqual(data["personalData"]["curTitle"], {"en": "Dev", "zh": "Dev"})
         self.assertEqual(data["personalData"]["socialLinks"], {"github": "https://github.com/x"})
         self.assertEqual(data["uiText"]["bio"], {"en": "hello", "zh": "hello"})
         self.assertEqual(data["terminalLines"], [{"command": "x --a", "output": {"en": "one", "zh": "一"}}])
         self.assertEqual(data["skills"][0]["items"], ["AWS", "Docker"])
         self.assertEqual(data["skills"][0]["skillsIcon"], "cloud")
         self.assertEqual([(p["title"]["en"], p["isSensitive"]) for p in data["projects"]],
-                         [("Shown", False), ("Hidden", True)])  # unchecked "show on site" = sensitive
-        self.assertEqual(data["projects"][0]["tags"], ["B", "A"])  # typed order kept
+                         [("Shown", False), ("Hidden", True)])
+        self.assertEqual(data["projects"][0]["tags"], ["B", "A"])
         self.assertTrue(data["projects"][0]["isAvaliable"])
         self.assertEqual(data["experience"][0]["period"], "Oct 2024 — Present")
         self.assertEqual(data["experience"][0]["summary"], [

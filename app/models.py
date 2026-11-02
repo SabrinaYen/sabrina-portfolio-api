@@ -38,7 +38,6 @@ class ActivityLogs(base):
     details = Column(JSON, nullable=True, default=dict)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), default=func.now())
     
-# sub to company and purpose
 class CompanyGrp(base):
     __tablename__ = "company_grp"
     id = Column(Integer, primary_key=True,autoincrement=True)
@@ -68,7 +67,6 @@ class Project(base):
      updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), default=func.now(), onupdate=func.now())
 
 
-# ---- existing tables used by the portal's experience / skills / tech stack ----
 class Experience(base):
     __tablename__ = "experience"
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -120,7 +118,6 @@ class ProjectTag(base):
     tag_id = Column(Integer, ForeignKey("tag_grp.id"), primary_key=True)
 
 
-# ---- content the other tables have no column for (Chinese text, skill icon, ...) ----
 class ExtraText(base):
     __tablename__ = "extra_text"
     __table_args__ = (

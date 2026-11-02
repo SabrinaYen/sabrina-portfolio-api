@@ -12,9 +12,8 @@ from app.database import get_db
 from app import models
 from app.errors import Unauthorized
 
-load_dotenv(); # setup env configuration
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token") # getCurrentUser() func bearer token
-bearer = HTTPBearer()  # reads "Authorization: Bearer <token>"
+load_dotenv();
+bearer = HTTPBearer()
 
 SECRET_KEY = os.getenv("SECRET_KEY");
 ALGORITHM = os.getenv("ALGORITHM");
@@ -24,11 +23,9 @@ def encryptPwd(pwd: str) -> str:
     hashed = bcrypt.hashpw(pwd.encode("utf-8"), bcrypt.gensalt())
     return hashed.decode("utf-8")
 
-# this is to verify correct pwd from db;
 def verifyPwd(inputPwd: str, hashPwd: str) -> bool:
     return bcrypt.checkpw(inputPwd.encode("utf-8"), hashPwd.encode("utf-8"))
 
-# generate token after login
 def generateToken(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
