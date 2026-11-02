@@ -1,11 +1,10 @@
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from sqlalchemy import delete
 from app.database import get_db
 from app.site_data import router as site_data_router
-from app.errors import Duplicate, InUse, NotFound, ServerError, Unauthorized
+from app.errors import Duplicate, InUse, NotFound, Unauthorized, commitOr500
 from app import models, schemas
 from app.auth import verifyPwd, generateToken, getCurrentUser
 import os
@@ -58,15 +57,9 @@ def login(payload: schemas.LoginRequest, db: Session = Depends(get_db)):
     user = verifyUsr(payload, db)
     if not user:
         raise Unauthorized("Invalid email or password")
-    else:
-        try:
-            user.last_login_at = datetime.now(timezone.utc)
-            db.commit()
-            token = generateToken(data={"sub": user.username})
-            return {"access_token": token, "token_type": "bearer"}
-        except SQLAlchemyError:
-            db.rollback()
-            raise ServerError("Could not complete login")
+    user.last_login_at = datetime.now(timezone.utc)
+    commitOr500(db, "Could not complete login")
+    return {"access_token": generateToken(data={"sub": user.username}), "token_type": "bearer"}
 
 
 @app.post("/get-param")
@@ -109,28 +102,24 @@ def GetActivityLogs(
 def checkExistedPrjRecord(company_id, purpose_id, project_name, db: Session):
     if not company_id or not purpose_id or not project_name:
         return False
-    else:
-        return (
-            db.query(models.Project)
-            .filter(
-                models.Project.company_id == company_id,
-                models.Project.purpose_id == purpose_id,
-                models.Project.project_name == project_name,
-            )
-            .first()
-            is not None
+    return (
+        db.query(models.Project)
+        .filter(
+            models.Project.company_id == company_id,
+            models.Project.purpose_id == purpose_id,
+            models.Project.project_name == project_name,
         )
+        .first()
+        is not None
+    )
 
 
 @app.get("/get-company-list")
 def GetCompanyList(
     db: Session = Depends(get_db), user: models.User = Depends(getCurrentUser)
 ):
-    logs_rows = db.query(models.CompanyGrp).all()
-    if logs_rows:
-        return [{"id": row.id, "name": row.name} for row in logs_rows]
-    else:
-        return []
+    rows = db.query(models.CompanyGrp).all()
+    return [{"id": row.id, "name": row.name} for row in rows]
 
 
 @app.post("/add-company")
@@ -147,14 +136,10 @@ def AddCompany(
     if isExisted:
         raise Duplicate()
 
-    try:
-        new_company = models.CompanyGrp(name=payload.companyName)
-        db.add(new_company)
-        db.commit()
-        db.refresh(new_company)
-    except SQLAlchemyError:
-        db.rollback()
-        raise ServerError("Could not add company")
+    new_company = models.CompanyGrp(name=payload.companyName)
+    db.add(new_company)
+    commitOr500(db, "Could not add company")
+    db.refresh(new_company)
     return {"id": new_company.id, "name": new_company.name}
 
 
@@ -166,21 +151,16 @@ def DeleteCompany(
 ):
     if db.query(models.Project).filter(models.Project.company_id == payload.id).first():
         raise InUse("Company")
-    try:
-        filterReq = (models.CompanyGrp.name == payload.name) & (
-            models.CompanyGrp.id == payload.id
+    result = db.execute(
+        delete(models.CompanyGrp).where(
+            (models.CompanyGrp.name == payload.name) & (models.CompanyGrp.id == payload.id)
         )
-        result = db.execute(delete(models.CompanyGrp).where(filterReq))
-        if result.rowcount == 0:
-            db.rollback()
-            raise NotFound("Company")
-        db.commit()
-        return {"message": "Company deleted"}
-    except HTTPException:
-        raise
-    except SQLAlchemyError:
+    )
+    if result.rowcount == 0:
         db.rollback()
-        raise ServerError("Could not delete company")
+        raise NotFound("Company")
+    commitOr500(db, "Could not delete company")
+    return {"message": "Company deleted"}
 
 
 @app.get("/get-purpose-list")
@@ -204,10 +184,6 @@ def AddProject(
         raise Duplicate()
     new_project = saveProject(db, models.Project(), payload)
     logActivity(db, user, "add-project", {"name": payload.project_name})
-    try:
-        db.commit()
-        db.refresh(new_project)
-    except SQLAlchemyError:
-        db.rollback()
-        raise ServerError("Could not add project")
+    commitOr500(db, "Could not add project")
+    db.refresh(new_project)
     return projectResponse(db, new_project)

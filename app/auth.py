@@ -33,13 +33,11 @@ def generateToken(data: dict, expires_delta: timedelta | None = None):
     else:
         expire = datetime.now(timezone.utc) + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def decodeToken(access_token:str) -> dict:
     try:
-        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
+        return jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
     except jwt.PyJWTError:
         raise Unauthorized()
 
