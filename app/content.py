@@ -468,7 +468,6 @@ def AddLink(
     db: Session = Depends(get_db),
     user: models.User = Depends(getCurrentUser),
 ):
-    """Adds the link, or updates the URL if the label already exists."""
     row = (
         db.query(models.PrmSetup)
         .filter(models.PrmSetup.locate_at == LINKS, models.PrmSetup.param_id == payload.label)
